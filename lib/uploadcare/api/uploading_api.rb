@@ -17,9 +17,26 @@ module Uploadcare
       elsif object.kind_of?(Array)
         upload_files(object)
 
+      # rack file
+      elsif object.kind_of?(ActionDispatch::Http::UploadedFile)
+        upload_temp_file(object)
+
       else
         raise ArgumentError.new "you should give File object, array of files or valid url string"
       end
+    end
+
+    def upload_temp_file file
+      raise ArgumentError.new 'expecting UploadedFile object' unless file.kind_of?(ActionDispatch::Http::UploadedFile)
+
+      response = @upload_connection.send :post, '/base/', {
+        UPLOADCARE_PUB_KEY: @options[:public_key],
+        file: build_upload_io(file.tempfile, file.content_type)
+      }
+      
+      uuid = response.body["file"]
+
+      Uploadcare::Api::File.new self, uuid
     end
 
 
@@ -84,9 +101,11 @@ module Uploadcare
         response = @upload_connection.send method, path, params
       end
 
-      def build_upload_io file
-        Faraday::UploadIO.new file.path, extract_mime_type(file)
+      def build_upload_io file, mime_type=nil
+        mime_type = extract_mime_type(file) if mime_type.nil?
+        Faraday::UploadIO.new file.path, mime_type
       end
+
 
 
     private
