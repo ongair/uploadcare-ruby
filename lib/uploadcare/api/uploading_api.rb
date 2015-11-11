@@ -26,6 +26,19 @@ module Uploadcare
       end
     end
 
+    def upload_tmp_file tmp_file, pathname
+      raise ArgumentError.new 'expecting Tempfile object' unless tmp_file.kind_of?(Tempfile)
+
+      response = @upload_connection.send :post, '/base/', {
+        UPLOADCARE_PUB_KEY: @options[:public_key],
+        file:  build_upload_io(tmp_file, extract_mime_type_from_name(pathname))
+      }
+
+      uuid = response.body["file"]
+
+      Uploadcare::Api::File.new self, uuid
+    end
+
     def upload_temp_file file
       raise ArgumentError.new 'expecting UploadedFile object' unless file.kind_of?(ActionDispatch::Http::UploadedFile) || file.kind_of?(Rack::Test::UploadedFile)
 
@@ -120,10 +133,14 @@ module Uploadcare
         token = response.body["token"]
       end
 
+      def extract_mime_type_from_name file_name
+        types = MIME::Types.of(file_name)
+        types[0].content_type
+      end
+
 
       def extract_mime_type file
-        types = MIME::Types.of(file.path)
-        types[0].content_type
+        extract_mime_type_from_name file.path
       end
   end
 end
