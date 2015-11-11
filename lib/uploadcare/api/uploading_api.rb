@@ -18,7 +18,7 @@ module Uploadcare
         upload_files(object)
 
       # rack file
-      elsif object.kind_of?(ActionDispatch::Http::UploadedFile)
+      elsif object.kind_of?(ActionDispatch::Http::UploadedFile) || object.kind_of?(Rack::Test::UploadedFile)
         upload_temp_file(object)
 
       else
@@ -27,7 +27,7 @@ module Uploadcare
     end
 
     def upload_temp_file file
-      raise ArgumentError.new 'expecting UploadedFile object' unless file.kind_of?(ActionDispatch::Http::UploadedFile)
+      raise ArgumentError.new 'expecting UploadedFile object' unless file.kind_of?(ActionDispatch::Http::UploadedFile) || file.kind_of?(Rack::Test::UploadedFile)
 
       response = @upload_connection.send :post, '/base/', {
         UPLOADCARE_PUB_KEY: @options[:public_key],
