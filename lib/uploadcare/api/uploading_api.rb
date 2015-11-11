@@ -31,6 +31,7 @@ module Uploadcare
 
       response = @upload_connection.send :post, '/base/', {
         UPLOADCARE_PUB_KEY: @options[:public_key],
+        filename: pathname,
         file:  build_upload_io(tmp_file, extract_mime_type_from_name(pathname))
       }
 
