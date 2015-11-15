@@ -45,7 +45,8 @@ module Uploadcare
 
       response = @upload_connection.send :post, '/base/', {
         UPLOADCARE_PUB_KEY: @options[:public_key],
-        file: build_upload_io(file.tempfile, file.content_type)
+        file: build_upload_io(file.tempfile, file.content_type),
+        filename: file.original_filename
       }
       
       uuid = response.body["file"]
